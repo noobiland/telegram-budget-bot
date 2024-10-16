@@ -1,1 +1,2 @@
-resources/token
+resources
+output/expenses.db
