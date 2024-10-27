@@ -9,8 +9,11 @@ docker run -dit --name budget-bot-app -v "$(Get-Location)/output:/output" firepa
 
 # 32 bit
 docker buildx build --platform linux/arm/v7 -t firepand4/fortress:budget-bot .
+docker push firepand4/fortress:budget-bot
 
 
+
+docker run -dit --name budget-bot-app -v "/home/pi/temp/telegram:/output" firepand4/fortress:budget-bot
 
 -v $(pwd):/app
 

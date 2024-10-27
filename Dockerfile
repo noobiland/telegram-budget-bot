@@ -2,7 +2,7 @@
 FROM golang:1.23 AS builder
 
 # Enable CGO and set up environment variables for Go
-ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=7 CC=arm-linux-gnueabihf-gcc
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -14,8 +14,8 @@ RUN go mod download
 # Copy the rest of the application code, including resources and output directories
 COPY . .
 
-# Install the necessary development libraries for SQLite
-RUN apt-get update && apt-get install -y gcc libc6-dev
+# Install the necessary development libraries for SQLite and cross-compilation tools
+RUN apt-get update && apt-get install -y gcc libc6-dev gcc-arm-linux-gnueabihf
 
 # Build the application
 RUN go build -o telegram-budget-bot ./bot/main.go
@@ -30,9 +30,6 @@ RUN apt-get update && apt-get install -y libc6 libsqlite3-0 ca-certificates && r
 COPY --from=builder /app/telegram-budget-bot /telegram-budget-bot
 COPY --from=builder /app/resources /resources
 COPY --from=builder /app/output /output
-
-# Expose the port your application listens on (if applicable)
-# EXPOSE 8080
 
 # Run the Go binary
 ENTRYPOINT ["/telegram-budget-bot"]
