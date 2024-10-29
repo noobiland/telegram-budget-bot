@@ -3,7 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
+	"telegram-budget-bot/bot/util"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -12,7 +13,7 @@ func Init() {
 	// Connect to SQLite database (or create if not exists)
 	db, err := sql.Open("sqlite3", "./output/expenses.db")
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		util.Logger.Error("Failed to connect to database", "error", err)
 	}
 	defer db.Close()
 
@@ -20,7 +21,7 @@ func Init() {
 	tableName := "expenses"
 	err = createTableIfNotExists(db, tableName)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		util.Logger.Error("Can't create table", "error", err)
 	}
 }
 
@@ -50,9 +51,9 @@ func createTableIfNotExists(db *sql.DB, tableName string) error {
 		if err != nil {
 			return fmt.Errorf("error creating table: %v", err)
 		}
-		fmt.Printf("Table '%s' created successfully.\n", tableName)
+		slog.Debug(fmt.Sprintf("Table '%s' created successfully.\n", tableName))
 	} else {
-		fmt.Printf("Table '%s' already exists.\n", tableName)
+		slog.Debug(fmt.Sprintf("Table '%s' already exists.\n", tableName))
 	}
 
 	return nil

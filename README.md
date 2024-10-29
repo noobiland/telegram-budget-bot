@@ -11,8 +11,6 @@ docker run -dit --name budget-bot-app -v "$(Get-Location)/output:/output" firepa
 docker buildx build --platform linux/arm/v7 -t firepand4/fortress:budget-bot .
 docker push firepand4/fortress:budget-bot
 
-
-
 docker run -dit --name budget-bot-app -v "/home/pi/temp/telegram:/output" firepand4/fortress:budget-bot
 
 -v $(pwd):/app
@@ -22,6 +20,7 @@ docker run -dit --name budget-bot-app -v "/home/pi/temp/telegram:/output" firepa
 
 # TODO
 - add logging
-- add db integration
+- reorganize code
+- add confirmation step
 - add db versioning (migrations)
     - https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md

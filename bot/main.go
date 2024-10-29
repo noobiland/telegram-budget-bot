@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strconv"
@@ -12,7 +12,8 @@ import (
 	"telegram-budget-bot/bot/commands"
 	"telegram-budget-bot/bot/db"
 	"telegram-budget-bot/bot/expence"
-	"telegram-budget-bot/bot/shared"
+	"telegram-budget-bot/bot/mode"
+	"telegram-budget-bot/bot/util"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -29,11 +30,12 @@ func main() {
 
 	token, err := os.ReadFile("resources/token")
 	if err != nil {
-		log.Fatal(err)
+		util.Logger.Error("No Token", "error", err)
 	}
 
 	b, err := bot.New(string(token), opts...)
 	if err != nil {
+		util.Logger.Error("Can't create bot instance.", "error", err)
 		panic(err)
 	}
 
@@ -47,7 +49,7 @@ func main() {
 }
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	fmt.Println("Got a message from chat Id: ", update.Message.Chat.ID)
+	slog.Info(fmt.Sprintf("Got a message from chat Id: %d", update.Message.Chat.ID))
 
 	var _, ok = auth.GetUserName(update.Message.Chat.ID)
 	if !ok {
@@ -55,11 +57,16 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		return
 	}
 
-	shared.Mode.RLock()
-	state, exists := shared.Mode.M[update.Message.Chat.ID]
-	shared.Mode.RUnlock()
+	mode.Storage.RLock()
+	state, exists := mode.Storage.M[update.Message.Chat.ID]
+	mode.Storage.RUnlock()
 
-	if !exists || state == "" {
+	if !exists {
+		state = mode.InputAmount
+	}
+
+	switch state {
+	case mode.InputAmount:
 		sum, err := strconv.Atoi(update.Message.Text)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
@@ -69,19 +76,19 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		} else {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.Chat.ID,
-				Text:   fmt.Sprintf("Valid input, %d is number!!!", sum),
+				Text:   fmt.Sprintf("¥%d\nPlease provide the spending category.", sum),
 			})
 			expence.SetExpence(update.Message.Chat.ID, sum)
 			expence.ChooseCategoryMsg(ctx, b, update)
-			shared.Mode.Lock()
-			shared.Mode.M[update.Message.Chat.ID] = "waiting_for_category"
-			shared.Mode.Unlock()
+			mode.Storage.Lock()
+			mode.Storage.M[update.Message.Chat.ID] = mode.WaitingForCategory
+			mode.Storage.Unlock()
 		}
-	} else if state == "waiting_for_category" {
+	case mode.WaitingForCategory:
 		expence.ChooseCategoryMsg(ctx, b, update)
-	} else if state == "waiting_for_payment" {
+	case mode.WaitingForPayment:
 		expence.ChoosePaymentMsg(ctx, b, update)
-	} else if state == "waiting_for_confirmation" {
+	case mode.WaitingForConfirmation:
 		expence.ConfirmationMsg(ctx, b, update)
 	}
 }

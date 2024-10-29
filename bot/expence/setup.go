@@ -3,45 +3,20 @@ package expence
 import (
 	"context"
 	"fmt"
-
+	"log/slog"
 	"sync"
 	"telegram-budget-bot/bot/auth"
 	"telegram-budget-bot/bot/db"
-	"telegram-budget-bot/bot/shared"
+	"telegram-budget-bot/bot/mode"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
-	"github.com/go-telegram/ui/keyboard/reply"
 )
-
-var defaultReplyKeyboard *reply.ReplyKeyboard
-var categoryReplyKeyboard *reply.ReplyKeyboard
-var paymentReplyKeyboard *reply.ReplyKeyboard
 
 var userStatus = struct {
 	sync.RWMutex
 	m map[int64]transactionStatus
 }{m: make(map[int64]transactionStatus)}
-
-type transactionStatus struct {
-	sum      int
-	category string
-	payment  string
-}
-
-func (ts *transactionStatus) setCategory(category string) {
-	ts.category = category
-}
-
-func (ts *transactionStatus) setPayment(payment string) {
-	ts.payment = payment
-}
-
-func (ts *transactionStatus) reset() {
-	ts.sum = 0
-	ts.category = ""
-	ts.payment = ""
-}
 
 func SetExpence(userId int64, sum int) {
 	userStatus.Lock()
@@ -54,20 +29,7 @@ func SetExpence(userId int64, sum int) {
 }
 
 // Category
-func InitCategoryKeyboard(b *bot.Bot) {
-	categoryReplyKeyboard = reply.New(reply.WithPrefix("category_keyboard"), reply.IsSelective()).
-		Button("🍽️ Food & 🧼 Household goods", b, bot.MatchTypeExact, ChoosenCategory).Button("🚇 Transport", b, bot.MatchTypeExact, ChoosenCategory).
-		Row().
-		Button("☕ Cafe & 🍻Parties", b, bot.MatchTypeExact, ChoosenCategory).Button("🐕 Dog", b, bot.MatchTypeExact, ChoosenCategory).
-		Row().
-		Button("🛒 Shopping", b, bot.MatchTypeExact, ChoosenCategory).Button("💧 Water & ⚡Electricity", b, bot.MatchTypeExact, ChoosenCategory).
-		Row().
-		Button("🏛️ Taxes", b, bot.MatchTypeExact, ChoosenCategory).Button("💄Beaty", b, bot.MatchTypeExact, ChoosenCategory).
-		Row()
-}
-
 func ChooseCategoryMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
-
 	var _, ok = auth.GetUserName(update.Message.Chat.ID)
 	if !ok {
 		auth.SendMessageToUnregisteredUser(ctx, b, update)
@@ -76,7 +38,7 @@ func ChooseCategoryMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
-		Text:        "Select example command from reply keyboard:",
+		Text:        "Select Spending Category:",
 		ReplyMarkup: categoryReplyKeyboard,
 	})
 }
@@ -93,28 +55,23 @@ func ChoosenCategory(ctx context.Context, b *bot.Bot, update *models.Update) {
 		ChatID: update.Message.Chat.ID,
 		Text:   "You selected: " + string(update.Message.Text),
 	})
-	shared.Mode.Lock()
-	shared.Mode.M[update.Message.Chat.ID] = "waiting_for_payment"
-	shared.Mode.Unlock()
+	mode.Storage.Lock()
+	mode.Storage.M[update.Message.Chat.ID] = mode.WaitingForPayment
+	mode.Storage.Unlock()
 
 	userStatus.Lock()
 	var ts = userStatus.m[update.Message.Chat.ID]
-	
-	fmt.Println("ts before categorySet: ", ts)
+
+	slog.Debug(fmt.Sprintf("ts before categorySet: %+v", ts))
 	ts.setCategory(string(update.Message.Text))
 	userStatus.m[update.Message.Chat.ID] = ts
-	fmt.Println("ts after categorySet: ", ts)
+	slog.Debug(fmt.Sprintf("ts after categorySet: %+v", ts))
 	userStatus.Unlock()
 
 	ChoosePaymentMsg(ctx, b, update)
 }
 
 // Payment
-func InitPaymentKeyboard(b *bot.Bot) {
-	paymentReplyKeyboard = reply.New(reply.WithPrefix("payment_keyboard"), reply.IsOneTimeKeyboard()).
-		Button("💵 Cash", b, bot.MatchTypeExact, ChoosenPayment).Button("💳 Credit Card", b, bot.MatchTypeExact, ChoosenPayment)
-}
-
 func ChoosePaymentMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	var _, ok = auth.GetUserName(update.Message.Chat.ID)
@@ -125,7 +82,7 @@ func ChoosePaymentMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
-		Text:        "Select example command from reply keyboard:",
+		Text:        "Select Payment Method:",
 		ReplyMarkup: paymentReplyKeyboard,
 	})
 }
@@ -143,27 +100,23 @@ func ChoosenPayment(ctx context.Context, b *bot.Bot, update *models.Update) {
 		Text:   "You selected: " + string(update.Message.Text),
 	})
 
-	shared.Mode.Lock()
-	shared.Mode.M[update.Message.Chat.ID] = "waiting_for_confirmation"
-	shared.Mode.Unlock()
+	mode.Storage.Lock()
+	mode.Storage.M[update.Message.Chat.ID] = mode.WaitingForConfirmation
+	mode.Storage.Unlock()
 
 	userStatus.Lock()
 	var ts = userStatus.m[update.Message.Chat.ID]
-	fmt.Println("ChatId: ", update.Message.Chat.ID)
-	fmt.Println("ts before setPayment: ", ts)
+	slog.Debug(fmt.Sprintf("ChatId: %d", update.Message.Chat.ID))
+	slog.Debug(fmt.Sprintf("ts before setPayment: %+v", ts))
 	ts.setPayment(string(update.Message.Text))
 	userStatus.m[update.Message.Chat.ID] = ts
-	fmt.Println("ts after setPayment: ", ts)
+	slog.Debug(fmt.Sprintf("ts after setPayment: %+v", ts))
 	userStatus.Unlock()
 
 	ConfirmationMsg(ctx, b, update)
 }
 
 // default button to remove the payment one
-func InitDefaultKeyboard(b *bot.Bot) {
-	defaultReplyKeyboard = reply.New(reply.WithPrefix("default_keyboard"), reply.IsOneTimeKeyboard()).
-		Button("Dummy", b, bot.MatchTypeExact, defaultButton)
-}
 
 func defaultButton(ctx context.Context, b *bot.Bot, update *models.Update) {
 	var _, ok = auth.GetUserName(update.Message.Chat.ID)
@@ -174,7 +127,7 @@ func defaultButton(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   "11!!!11!1!",
+		Text:   "Connection successful!",
 	})
 }
 
@@ -188,8 +141,7 @@ func ConfirmationMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 	}
 
 	response, exists := userStatus.m[update.Message.Chat.ID]
-	fmt.Println("ChatId: ", update.Message.Chat.ID)
-	fmt.Println("confirmation response: ", response)
+	slog.Info(fmt.Sprintf("ChatId: %d confirmation response: %+v", update.Message.Chat.ID, response))
 	if !exists {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: update.Message.Chat.ID,
@@ -197,28 +149,31 @@ func ConfirmationMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 		})
 	}
 	var ts = userStatus.m[update.Message.Chat.ID]
-	userName,_ := auth.GetUserName(update.Message.Chat.ID)
+	userName, _ := auth.GetUserName(update.Message.Chat.ID)
 	db.Insert(userName, ts.sum, ts.category, ts.payment)
 
+	var confirmationMsg = fmt.Sprintf("Amount:\t\t\t¥%d\nCategory:\t\t%s\nPayment:\t\t%s", response.sum, response.category, response.payment)
+
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		Text:        fmt.Sprintf("%#v", response),
-		ReplyMarkup: defaultReplyKeyboard,
+		ChatID:			update.Message.Chat.ID,
+		Text:			confirmationMsg,
+		ReplyMarkup:	defaultReplyKeyboard,
 	})
 
 	userStatus.Lock()
-	fmt.Println("ChatId: ", update.Message.Chat.ID)
-	fmt.Println("ts before reset: ", ts)
+	slog.Debug(fmt.Sprintf("ChatId: %d", update.Message.Chat.ID))
+	slog.Debug(fmt.Sprintf("ts before reset: %+v", ts))
 	ts.reset()
 	userStatus.m[update.Message.Chat.ID] = ts
-	fmt.Println("ts after reset: ", ts)
+	slog.Debug(fmt.Sprintf("ts after reset: %+v", ts))
 	userStatus.Unlock()
 
-	shared.Mode.Lock()
-	shared.Mode.M[update.Message.Chat.ID] = ""
-	shared.Mode.Unlock()
+	mode.Storage.Lock()
+	mode.Storage.M[update.Message.Chat.ID] = mode.InputAmount
+	mode.Storage.Unlock()
 }
 
+// TODO: add confirmation step
 func Confirmed(ctx context.Context, b *bot.Bot, update *models.Update) {
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,

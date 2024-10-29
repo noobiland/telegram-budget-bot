@@ -10,6 +10,6 @@ import (
 func HelpHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   "Dummy help message",
+		Text:   "Provide the amount of expenses in ¥.\nThen press menu buttons to setup a transaction.",
 	})
 }
