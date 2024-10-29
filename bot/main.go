@@ -20,6 +20,7 @@ import (
 )
 
 func main() {
+	slog.Info("Starting configuration...")
 	db.Init()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -28,24 +29,29 @@ func main() {
 		bot.WithDefaultHandler(defaultHandler),
 	}
 
+	slog.Info("Reading token...")
 	token, err := os.ReadFile("resources/token")
 	if err != nil {
 		util.Logger.Error("No Token", "error", err)
 	}
 
+	slog.Info("Set up bot")
 	b, err := bot.New(string(token), opts...)
 	if err != nil {
 		util.Logger.Error("Can't create bot instance.", "error", err)
 		panic(err)
 	}
 
+	slog.Info("Preparing handlers and keyboards...")
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, commands.HelpHandler)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/cancel", bot.MatchTypeExact, commands.CancelHandler)
 	expence.InitDefaultKeyboard(b)
 	expence.InitCategoryKeyboard(b)
 	expence.InitPaymentKeyboard(b)
-
+	
+	slog.Info("Starting context...")
 	b.Start(ctx)
+	slog.Info("Bot Is Ready")
 }
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

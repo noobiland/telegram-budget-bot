@@ -10,7 +10,7 @@ import (
 )
 
 func Init() {
-	// Connect to SQLite database (or create if not exists)
+	slog.Info("Connect to SQLite database (or create if not exists)")
 	db, err := sql.Open("sqlite3", "./output/expenses.db")
 	if err != nil {
 		util.Logger.Error("Failed to connect to database", "error", err)
@@ -49,11 +49,11 @@ func createTableIfNotExists(db *sql.DB, tableName string) error {
 
 		_, err := db.Exec(createTableQuery)
 		if err != nil {
-			return fmt.Errorf("error creating table: %v", err)
+			return fmt.Errorf("error during table creation table: %v", err)
 		}
-		slog.Debug(fmt.Sprintf("Table '%s' created successfully.\n", tableName))
+		slog.Info(fmt.Sprintf("Table '%s' created successfully", tableName))
 	} else {
-		slog.Debug(fmt.Sprintf("Table '%s' already exists.\n", tableName))
+		slog.Info(fmt.Sprintf("Table '%s' already exists. Reusing existing table", tableName))
 	}
 
 	return nil
