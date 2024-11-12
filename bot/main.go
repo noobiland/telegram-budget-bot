@@ -48,10 +48,9 @@ func main() {
 	expence.InitDefaultKeyboard(b)
 	expence.InitCategoryKeyboard(b)
 	expence.InitPaymentKeyboard(b)
-	
+
 	slog.Info("Starting context...")
 	b.Start(ctx)
-	slog.Info("Bot Is Ready")
 }
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -82,7 +81,7 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		} else {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.Chat.ID,
-				Text:   fmt.Sprintf("¥%d\nPlease provide the spending category.", sum),
+				Text:   fmt.Sprintf("¥%d\nPlease provide the spending category", sum),
 			})
 			expence.SetExpence(update.Message.Chat.ID, sum)
 			expence.ChooseCategoryMsg(ctx, b, update)

@@ -19,8 +19,4 @@ docker run -dit --name budget-bot-app -v "/home/pi/temp/telegram:/output" firepa
 
 
 # TODO
-- add logging
-- reorganize code
 - add confirmation step
-- add db versioning (migrations)
-    - https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md

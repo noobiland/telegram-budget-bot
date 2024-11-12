@@ -41,10 +41,10 @@ func createTableIfNotExists(db *sql.DB, tableName string) error {
 		createTableQuery := fmt.Sprintf(`
 			CREATE TABLE %s (
 		"timestamp"	INTEGER NOT NULL,
-		"user"	TEXT NOT NULL,
+		"user"		TEXT 	NOT NULL,
 		"amount"	INTEGER NOT NULL,
-		"category"	TEXT NOT NULL,
-		"payment"	TEXT NOT NULL
+		"category"	TEXT 	NOT NULL,
+		"payment"	TEXT 	NOT NULL
 	);`, tableName)
 
 		_, err := db.Exec(createTableQuery)

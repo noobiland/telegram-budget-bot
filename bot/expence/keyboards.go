@@ -13,11 +13,13 @@ func InitCategoryKeyboard(b *bot.Bot) {
 	categoryReplyKeyboard = reply.New(reply.WithPrefix("category_keyboard"), reply.IsSelective()).
 		Button("🍽️ Food & 🧼 Household goods", b, bot.MatchTypeExact, ChoosenCategory).Button("🚇 Transport", b, bot.MatchTypeExact, ChoosenCategory).
 		Row().
-		Button("☕ Cafe & 🍻Parties", b, bot.MatchTypeExact, ChoosenCategory).Button("🐕 Dog", b, bot.MatchTypeExact, ChoosenCategory).
+		Button("☕ Cafe", b, bot.MatchTypeExact, ChoosenCategory).Button("🐕 Dog", b, bot.MatchTypeExact, ChoosenCategory).
+		Row().
+		Button("🎫Events", b, bot.MatchTypeExact, ChoosenCategory).Button("🥋Sport", b, bot.MatchTypeExact, ChoosenCategory).
 		Row().
 		Button("🛒 Shopping", b, bot.MatchTypeExact, ChoosenCategory).Button("💧 Water & ⚡Electricity", b, bot.MatchTypeExact, ChoosenCategory).
 		Row().
-		Button("🏛️ Taxes", b, bot.MatchTypeExact, ChoosenCategory).Button("💄Beaty", b, bot.MatchTypeExact, ChoosenCategory).
+		Button("🏛️ Taxes", b, bot.MatchTypeExact, ChoosenCategory).Button("💄Beaty & 💊Wellness", b, bot.MatchTypeExact, ChoosenCategory).
 		Row()
 }
 
