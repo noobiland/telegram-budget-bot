@@ -15,7 +15,9 @@ func InitCategoryKeyboard(b *bot.Bot) {
 		Row().
 		Button("☕ Cafe", b, bot.MatchTypeExact, ChoosenCategory).Button("🐕 Dog", b, bot.MatchTypeExact, ChoosenCategory).
 		Row().
-		Button("🎫Events", b, bot.MatchTypeExact, ChoosenCategory).Button("🥋Sport", b, bot.MatchTypeExact, ChoosenCategory).
+		Button("🤡Entertainment", b, bot.MatchTypeExact, ChoosenCategory).Button("🥋Sport", b, bot.MatchTypeExact, ChoosenCategory).
+		Row().
+		Button("📖Education", b, bot.MatchTypeExact, ChoosenCategory).Button("🛠️Cleaning/Repairs/etc.", b, bot.MatchTypeExact, ChoosenCategory).
 		Row().
 		Button("🛒 Shopping", b, bot.MatchTypeExact, ChoosenCategory).Button("💧 Water & ⚡Electricity", b, bot.MatchTypeExact, ChoosenCategory).
 		Row().

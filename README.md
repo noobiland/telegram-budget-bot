@@ -11,6 +11,9 @@ docker run -dit --name budget-bot-app -v "$(Get-Location)/output:/output" firepa
 docker buildx build --platform linux/arm/v7 -t firepand4/fortress:budget-bot .
 docker push firepand4/fortress:budget-bot
 docker image pull firepand4/fortress:budget-bot
+docker stop budget-bot-app
+docker rm budget-bot-app
+
 docker run -dit --name budget-bot-app -v "/home/pi/temp/telegram:/output" firepand4/fortress:budget-bot
 
 -v $(pwd):/app
