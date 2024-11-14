@@ -20,3 +20,4 @@ docker run -dit --name budget-bot-app -v "/home/pi/temp/telegram:/output" firepa
 
 # TODO
 - add confirmation step
+- discard doesn't return default keyboard
