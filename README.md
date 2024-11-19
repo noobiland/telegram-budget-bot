@@ -1,4 +1,4 @@
-# telegram-budjet-bot
+# telegram-budget-bot
 
 To run locally: generate dbs with db-handler and put files into output
 
@@ -14,8 +14,8 @@ docker run -dit --name budget-bot-app -v "$(Get-Location)/output:/output" firepa
 
 
 # TODO
-* [ ] get users from db
-* [ ] write data to db, which was prepared by db-handler
-- [ ] add confirmation step
-- [ ] discard doesn't return default keyboard
-- [ ] add reporting (daily/weekly/monthly)
+* [x] get users from db
+* [x] write data to db, which was prepared by db-handler
+* [ ] add confirmation step
+* [ ] discard doesn't return default keyboard
+* [ ] add reporting (daily/weekly/monthly)
