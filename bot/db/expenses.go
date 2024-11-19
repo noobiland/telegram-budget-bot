@@ -11,7 +11,6 @@ import (
 )
 
 func Insert(user string, amount int, category string, payment string) {
-
 	// Open the SQLite database, it will create the file if it doesn't exist
 	db, err := sql.Open("sqlite3", "./output/expenses.db")
 	if err != nil {

@@ -10,7 +10,6 @@ import (
 
 	"telegram-budget-bot/bot/auth"
 	"telegram-budget-bot/bot/commands"
-	"telegram-budget-bot/bot/db"
 	"telegram-budget-bot/bot/expence"
 	"telegram-budget-bot/bot/mode"
 	"telegram-budget-bot/bot/util"
@@ -21,7 +20,7 @@ import (
 
 func main() {
 	slog.Info("Starting configuration...")
-	db.Init()
+	// TODO: add db validation check
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 

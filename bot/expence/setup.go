@@ -88,7 +88,6 @@ func ChoosePaymentMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 }
 
 func ChoosenPayment(ctx context.Context, b *bot.Bot, update *models.Update) {
-
 	var _, ok = auth.GetUserName(update.Message.Chat.ID)
 	if !ok {
 		auth.SendMessageToUnregisteredUser(ctx, b, update)
@@ -155,9 +154,9 @@ func ConfirmationMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 	var confirmationMsg = fmt.Sprintf("Amount:\t\t\t¥%d\nCategory:\t\t%s\nPayment:\t\t%s", response.sum, response.category, response.payment)
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:			update.Message.Chat.ID,
-		Text:			confirmationMsg,
-		ReplyMarkup:	defaultReplyKeyboard,
+		ChatID:      update.Message.Chat.ID,
+		Text:        confirmationMsg,
+		ReplyMarkup: defaultReplyKeyboard,
 	})
 
 	userStatus.Lock()
