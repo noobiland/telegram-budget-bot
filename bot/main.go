@@ -20,7 +20,8 @@ import (
 
 func main() {
 	slog.Info("Starting configuration...")
-	// TODO: add db validation check
+	// TODO: add dbs validation check
+	auth.InitUsers()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 

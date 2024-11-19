@@ -1,5 +1,11 @@
 package auth
 
-var Ids = map[int]string{
-	54404771:  "Dima",  //Dima
-	233276954: "Dasha"} //Dasha
+import (
+	"telegram-budget-bot/bot/db"
+)
+
+var Ids = make(map[int]string)
+
+func InitUsers() {
+	Ids = db.GetUsers()
+}
