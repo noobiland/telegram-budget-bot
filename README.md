@@ -18,4 +18,7 @@ docker run -dit --name budget-bot-app -v "$(Get-Location)/output:/output" firepa
 * [x] write data to db, which was prepared by db-handler
 * [ ] add confirmation step
 * [ ] discard doesn't return default keyboard
-* [ ] add reporting (daily/weekly/monthly)
+* [X] ~~*add total reporting for previous month*~~ [2024-12-03]
+* [ ] total reporting for current month
+* [ ] total reporting for week
+* [ ] add options mechanism for reports
