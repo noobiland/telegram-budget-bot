@@ -19,6 +19,8 @@ docker run -dit --name budget-bot-app -v "$(Get-Location)/output:/output" firepa
 * [ ] add confirmation step
 * [ ] discard doesn't return default keyboard
 * [X] ~~*add total reporting for previous month*~~ [2024-12-03]
-* [ ] total reporting for current month
+* [X] ~~*total reporting for current month*~~ [2024-12-05]
 * [ ] total reporting for week
 * [ ] add options mechanism for reports
+* [ ] add tests
+* [ ] log clean up

@@ -46,6 +46,7 @@ func main() {
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, commands.HelpHandler)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/cancel", bot.MatchTypeExact, commands.CancelHandler)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/prev_month_stat", bot.MatchTypeExact, commands.PrevStatHandler)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/cur_month_stat", bot.MatchTypeExact, commands.CurStatHandler)
 	expence.InitDefaultKeyboard(b)
 	expence.InitCategoryKeyboard(b)
 	expence.InitPaymentKeyboard(b)

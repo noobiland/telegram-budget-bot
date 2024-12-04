@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"telegram-budget-bot/bot/auth"
 	"telegram-budget-bot/bot/db"
@@ -11,7 +11,7 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-// Turns on money mode
+// Stat messages
 func PrevStatHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	var name, ok = auth.GetUserName(update.Message.Chat.ID)
@@ -21,7 +21,23 @@ func PrevStatHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	}
 
 	var statMsg = db.PrevMonthStat(name)
-	fmt.Print(statMsg)
+	slog.Info(statMsg)
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text:   statMsg,
+	})
+}
+
+func CurStatHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+
+	var name, ok = auth.GetUserName(update.Message.Chat.ID)
+	if !ok {
+		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		return
+	}
+
+	var statMsg = db.CurrMonthStat(name)
+	slog.Info(statMsg)
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
 		Text:   statMsg,
