@@ -1,11 +1,15 @@
 package auth
 
-import (
-	"telegram-budget-bot/bot/db"
-)
+import "fmt"
 
 var Ids = make(map[int]string)
 
-func InitUsers() {
-	Ids = db.GetUsers()
+func InitUsers(getUsersFunc func() map[int]string) error {
+	users := getUsersFunc()
+	if users == nil {
+		return fmt.Errorf("failed to initialize users: user map is nil")
+	}
+	
+	Ids = users
+	return nil
 }
