@@ -9,7 +9,7 @@ func InitUsers(getUsersFunc func() map[int]string) error {
 	if users == nil {
 		return fmt.Errorf("failed to initialize users: user map is nil")
 	}
-	
+
 	Ids = users
 	return nil
 }

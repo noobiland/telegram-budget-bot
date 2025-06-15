@@ -13,33 +13,33 @@ import (
 
 // Stat messages
 func PrevStatHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-
-	var name, ok = auth.GetUserName(update.Message.Chat.ID)
+	chatId := update.Message.Chat.ID
+	name, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
-	var statMsg = db.PrevMonthStat(name)
+	statMsg := db.PrevMonthStat(name)
 	slog.Info(statMsg)
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
+		ChatID: chatId,
 		Text:   statMsg,
 	})
 }
 
 func CurStatHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-
-	var name, ok = auth.GetUserName(update.Message.Chat.ID)
+	chatId := update.Message.Chat.ID
+	name, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
-	var statMsg = db.CurrMonthStat(name)
+	statMsg := db.CurrMonthStat(name)
 	slog.Info(statMsg)
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
+		ChatID: chatId,
 		Text:   statMsg,
 	})
 }

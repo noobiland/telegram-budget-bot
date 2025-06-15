@@ -5,43 +5,47 @@ import (
 	"testing"
 )
 
-func TestInitUsers(t *testing.T) {
-	tests := []struct {
-		name           string
-		mockData       map[int]string
-		expectedResult map[int]string
-		expectError    bool
-	}{
-		{
-			name:           "empty user map",
-			mockData:       map[int]string{},
-			expectedResult: map[int]string{},
-			expectError:    false,
-		},
-		{
-			name: "single user",
-			mockData: map[int]string{
-				1: "UserA",
-			},
-			expectedResult: map[int]string{
-				1: "UserA",
-			},
-		},
-		{
-			name:           "nil user map",
-			mockData:       nil,
-			expectedResult: map[int]string{},
-			expectError:    true,
-		},
-	}
+// InitUsers test data preparation
+type initUsersTestCase = struct {
+	name           string
+	mockData       map[int]string
+	expectedResult map[int]string
+	expectError    bool
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+var initUsersTestCases = []initUsersTestCase{
+	{
+		name:           "empty user map",
+		mockData:       map[int]string{},
+		expectedResult: map[int]string{},
+		expectError:    false,
+	},
+	{
+		name: "single user",
+		mockData: map[int]string{
+			1: "Alice",
+		},
+		expectedResult: map[int]string{
+			1: "Alice",
+		},
+	},
+	{
+		name:           "nil user map",
+		mockData:       nil,
+		expectedResult: map[int]string{},
+		expectError:    true,
+	},
+}
+
+func TestInitUsers(t *testing.T) {
+
+	for _, tc := range initUsersTestCases {
+		t.Run(tc.name, func(t *testing.T) {
 			err := InitUsers(func() map[int]string {
-				return tt.mockData
+				return tc.mockData
 			})
 
-			if tt.expectError {
+			if tc.expectError {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
@@ -49,8 +53,8 @@ func TestInitUsers(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				if !reflect.DeepEqual(Ids, tt.expectedResult) {
-					t.Errorf("expected %v, got %v", tt.expectedResult, Ids)
+				if !reflect.DeepEqual(Ids, tc.expectedResult) {
+					t.Errorf("expected %v, got %v", tc.expectedResult, Ids)
 				}
 			}
 		})

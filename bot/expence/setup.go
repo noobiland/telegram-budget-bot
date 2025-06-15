@@ -29,153 +29,160 @@ func SetExpence(userId int64, sum int) {
 }
 
 // Category
-func ChooseCategoryMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+func ChooseCategoryMsg(ctx context.Context, b *bot.Bot, chatId int64) {
+	_, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
+		ChatID:      chatId,
 		Text:        "Select Spending Category:",
 		ReplyMarkup: categoryReplyKeyboard,
 	})
 }
 
 func ChoosenCategory(ctx context.Context, b *bot.Bot, update *models.Update) {
+	chatId := update.Message.Chat.ID
+	messageText := update.Message.Text
 
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	_, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   "You selected: " + string(update.Message.Text),
+		ChatID: chatId,
+		Text:   "You selected: " + messageText,
 	})
 	mode.Storage.Lock()
-	mode.Storage.M[update.Message.Chat.ID] = mode.WaitingForPayment
+	mode.Storage.M[chatId] = mode.WaitingForPayment
 	mode.Storage.Unlock()
 
 	userStatus.Lock()
-	var ts = userStatus.m[update.Message.Chat.ID]
+	ts := userStatus.m[chatId]
 
 	slog.Debug(fmt.Sprintf("ts before categorySet: %+v", ts))
-	ts.setCategory(string(update.Message.Text))
-	userStatus.m[update.Message.Chat.ID] = ts
+	ts.setCategory(messageText)
+	userStatus.m[chatId] = ts
 	slog.Debug(fmt.Sprintf("ts after categorySet: %+v", ts))
 	userStatus.Unlock()
 
-	ChoosePaymentMsg(ctx, b, update)
+	ChoosePaymentMsg(ctx, b, chatId)
 }
 
 // Payment
-func ChoosePaymentMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
+func ChoosePaymentMsg(ctx context.Context, b *bot.Bot, chatId int64) {
 
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	var _, ok = auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
+		ChatID:      chatId,
 		Text:        "Select Payment Method:",
 		ReplyMarkup: paymentReplyKeyboard,
 	})
 }
 
 func ChoosenPayment(ctx context.Context, b *bot.Bot, update *models.Update) {
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	chatId := update.Message.Chat.ID
+	messageText := update.Message.Text
+
+	_, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   "You selected: " + string(update.Message.Text),
+		ChatID: chatId,
+		Text:   "You selected: " + messageText,
 	})
 
 	mode.Storage.Lock()
-	mode.Storage.M[update.Message.Chat.ID] = mode.WaitingForConfirmation
+	mode.Storage.M[chatId] = mode.WaitingForConfirmation
 	mode.Storage.Unlock()
 
 	userStatus.Lock()
-	var ts = userStatus.m[update.Message.Chat.ID]
-	slog.Debug(fmt.Sprintf("ChatId: %d", update.Message.Chat.ID))
+	ts := userStatus.m[chatId]
+	slog.Debug(fmt.Sprintf("ChatId: %d", chatId))
 	slog.Debug(fmt.Sprintf("ts before setPayment: %+v", ts))
-	ts.setPayment(string(update.Message.Text))
-	userStatus.m[update.Message.Chat.ID] = ts
+	ts.setPayment(messageText)
+	userStatus.m[chatId] = ts
 	slog.Debug(fmt.Sprintf("ts after setPayment: %+v", ts))
 	userStatus.Unlock()
 
-	ConfirmationMsg(ctx, b, update)
+	ConfirmationMsg(ctx, b, chatId)
 }
 
 // default button to remove the payment one
 
 func defaultButton(ctx context.Context, b *bot.Bot, update *models.Update) {
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	var chatId = update.Message.Chat.ID
+
+	var _, ok = auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
+		ChatID: chatId,
 		Text:   "Connection successful!",
 	})
 }
 
 // Confirmation
-func ConfirmationMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
+func ConfirmationMsg(ctx context.Context, b *bot.Bot, chatId int64) {
 
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	var _, ok = auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
-	response, exists := userStatus.m[update.Message.Chat.ID]
-	slog.Info(fmt.Sprintf("ChatId: %d confirmation response: %+v", update.Message.Chat.ID, response))
+	response, exists := userStatus.m[chatId]
+	slog.Info(fmt.Sprintf("ChatId: %d confirmation response: %+v", chatId, response))
 	if !exists {
 		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.Chat.ID,
+			ChatID: chatId,
 			Text:   "Something went wrong with data!",
 		})
 	}
-	var ts = userStatus.m[update.Message.Chat.ID]
-	userName, _ := auth.GetUserName(update.Message.Chat.ID)
+	var ts = userStatus.m[chatId]
+	userName, _ := auth.GetUserName(chatId)
 	db.Insert(userName, ts.sum, ts.category, ts.payment)
 
 	var confirmationMsg = fmt.Sprintf("Amount:\t\t\t¥%d\nCategory:\t\t%s\nPayment:\t\t%s", response.sum, response.category, response.payment)
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
+		ChatID:      chatId,
 		Text:        confirmationMsg,
 		ReplyMarkup: defaultReplyKeyboard,
 	})
 
 	userStatus.Lock()
-	slog.Debug(fmt.Sprintf("ChatId: %d", update.Message.Chat.ID))
+	slog.Debug(fmt.Sprintf("ChatId: %d", chatId))
 	slog.Debug(fmt.Sprintf("ts before reset: %+v", ts))
 	ts.reset()
-	userStatus.m[update.Message.Chat.ID] = ts
+	userStatus.m[chatId] = ts
 	slog.Debug(fmt.Sprintf("ts after reset: %+v", ts))
 	userStatus.Unlock()
 
 	mode.Storage.Lock()
-	mode.Storage.M[update.Message.Chat.ID] = mode.InputAmount
+	mode.Storage.M[chatId] = mode.InputAmount
 	mode.Storage.Unlock()
 }
 
 // TODO: add confirmation step
-func Confirmed(ctx context.Context, b *bot.Bot, update *models.Update) {
+func Confirmed(ctx context.Context, b *bot.Bot, chatId int64) {
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
+		ChatID: chatId,
 		Text:   "Expence has confirmed",
 	})
 }

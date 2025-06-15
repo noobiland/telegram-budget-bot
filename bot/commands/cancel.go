@@ -13,17 +13,18 @@ import (
 
 // Discard everything
 func CancelHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	chatId := update.Message.Chat.ID
+	_, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
-	slog.Info(fmt.Sprintf("ChatId: %d discarded the data", update.Message.Chat.ID))
+	slog.Info(fmt.Sprintf("ChatId: %d discarded the data", chatId))
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
+		ChatID: chatId,
 		Text:   "Everything was discarded",
 	})
 	mode.Storage.Lock()
-	mode.Storage.M[update.Message.Chat.ID] = mode.InputAmount
+	mode.Storage.M[chatId] = mode.InputAmount
 	mode.Storage.Unlock()
 }

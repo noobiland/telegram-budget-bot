@@ -57,16 +57,18 @@ func main() {
 }
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	slog.Info(fmt.Sprintf("Got a message from chat Id: %d", update.Message.Chat.ID))
+	chatId := update.Message.Chat.ID
+	messageText := update.Message.Text
+	slog.Info(fmt.Sprintf("Got a message from chat Id: %d", chatId))
 
-	var _, ok = auth.GetUserName(update.Message.Chat.ID)
+	_, ok := auth.GetUserName(chatId)
 	if !ok {
-		auth.SendMessageToUnregisteredUser(ctx, b, update)
+		auth.SendMessageToUnregisteredUser(ctx, b, chatId)
 		return
 	}
 
 	mode.Storage.RLock()
-	state, exists := mode.Storage.M[update.Message.Chat.ID]
+	state, exists := mode.Storage.M[chatId]
 	mode.Storage.RUnlock()
 
 	if !exists {
@@ -75,28 +77,28 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	switch state {
 	case mode.InputAmount:
-		sum, err := strconv.Atoi(update.Message.Text)
+		sum, err := strconv.Atoi(messageText)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID: update.Message.Chat.ID,
-				Text:   fmt.Sprintf("Invalid input, %s is not a number", update.Message.Text),
+				ChatID: chatId,
+				Text:   fmt.Sprintf("Invalid input, %s is not a number", messageText),
 			})
 		} else {
 			b.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID: update.Message.Chat.ID,
+				ChatID: chatId,
 				Text:   fmt.Sprintf("¥%d\nPlease provide the spending category", sum),
 			})
-			expence.SetExpence(update.Message.Chat.ID, sum)
-			expence.ChooseCategoryMsg(ctx, b, update)
+			expence.SetExpence(chatId, sum)
+			expence.ChooseCategoryMsg(ctx, b, chatId)
 			mode.Storage.Lock()
-			mode.Storage.M[update.Message.Chat.ID] = mode.WaitingForCategory
+			mode.Storage.M[chatId] = mode.WaitingForCategory
 			mode.Storage.Unlock()
 		}
 	case mode.WaitingForCategory:
-		expence.ChooseCategoryMsg(ctx, b, update)
+		expence.ChooseCategoryMsg(ctx, b, chatId)
 	case mode.WaitingForPayment:
-		expence.ChoosePaymentMsg(ctx, b, update)
+		expence.ChoosePaymentMsg(ctx, b, chatId)
 	case mode.WaitingForConfirmation:
-		expence.ConfirmationMsg(ctx, b, update)
+		expence.ConfirmationMsg(ctx, b, chatId)
 	}
 }
